@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth.js v5 tables ────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Core models ─────────────────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  password       String?
+  role           Role      @default(EMPLOYEE)
+  organization   String?   // champ texte libre
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Auth.js
+  accounts       Account[]
+  sessions       Session[]
+
+  // Relations métier
+  createdEvents   Event[]         @relation("EventCreator")
+  eventShares     EventShare[]
+  assignedTasks   Task[]          @relation("TaskAssignee")
+  taskNotes       TaskNote[]      @relation("TaskNoteAuthor")
+  agendaEntries   AgendaEntry[]
+  resourceEntries ResourceEntry[]
+  ownedSlots      AgendaSlot[]    @relation("AgendaSlotOwner")
+  createdSlots    AgendaSlot[]    @relation("AgendaSlotCreator")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  isPublic    Boolean  @default(false)
+  creatorId   String
+  creator     User     @relation("EventCreator", fields: [creatorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shares        EventShare[]
+  tasks         Task[]
+  resources     Resource[]
+  agendaEntries AgendaEntry[]
+  agendaSlots   AgendaSlot[]
+}
+
+model EventShare {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+model AgendaEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  eventId     String?
+  event       Event?     @relation(fields: [eventId], references: [id])
+  assigneeId  String?
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  notes       TaskNote[]
+}
+
+model TaskNote {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("TaskNoteAuthor", fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// Une ressource = un besoin listé pour un événement
+model Resource {
+  id             String  @id @default(cuid())
+  name           String
+  description    String?
+  quantityNeeded Int     // total requis
+  unit           String? // ex: "unités", "kg", "bouteilles"
+  eventId        String?
+  event          Event?  @relation(fields: [eventId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  entries ResourceEntry[] // journal des approvisionnements
+}
+
+// Une entrée = un approvisionnement concret (qui, combien, où, quand)
+model ResourceEntry {
+  id            String   @id @default(cuid())
+  resourceId    String
+  resource      Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  quantity      Int      // quantité apportée
+  procuredById  String
+  procuredBy    User     @relation(fields: [procuredById], references: [id])
+  location      String?  // ex: "coffre numéro 7"
+  procuredAt    DateTime @default(now())
+  notes         String?
+}
+
+// Créneau personnel (agenda perso ou agenda de la Maire)
+model AgendaSlot {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  location    String?
+  startAt     DateTime
+  endAt       DateTime
+
+  ownerId     String
+  owner       User     @relation("AgendaSlotOwner", fields: [ownerId], references: [id])
+  createdById String
+  createdBy   User     @relation("AgendaSlotCreator", fields: [createdById], references: [id])
+
+  eventId     String?
+  event       Event?   @relation(fields: [eventId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MAIRE
+  ADJOINTE
+  EMPLOYEE
+  CONTRACTANT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
