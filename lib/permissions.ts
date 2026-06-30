@@ -11,7 +11,9 @@ export type Permission =
   | "agenda:maire:view"
   | "agenda:maire:write"
   | "users:manage"
-  | "admin:access";
+  | "admin:access"
+  | "contracts:create"
+  | "contracts:manage";
 
 const PERMISSIONS: Record<Role, Permission[]> = {
   ADMIN: [
@@ -26,6 +28,8 @@ const PERMISSIONS: Record<Role, Permission[]> = {
     "agenda:maire:write",
     "users:manage",
     "admin:access",
+    "contracts:create",
+    "contracts:manage",
   ],
   MAIRE: [
     "events:create:public",
@@ -39,6 +43,8 @@ const PERMISSIONS: Record<Role, Permission[]> = {
     "agenda:maire:write",
     "users:manage",
     "admin:access",
+    "contracts:create",
+    "contracts:manage",
   ],
   ADJOINTE: [
     "events:create:public",
@@ -49,6 +55,7 @@ const PERMISSIONS: Record<Role, Permission[]> = {
     "agenda:manage",
     "agenda:maire:view",
     "agenda:maire:write",
+    "contracts:create",
   ],
   EMPLOYEE: ["events:create:private", "tasks:edit:own", "agenda:manage"],
   CONTRACTANT: ["tasks:edit:own", "agenda:manage"],

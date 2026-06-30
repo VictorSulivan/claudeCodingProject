@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/events", label: "Événements", icon: "🎪" },
   { href: "/dashboard/tasks", label: "Tâches", icon: "✓" },
   { href: "/dashboard/resources", label: "Ressources", icon: "📦" },
+  { href: "/dashboard/contracts", label: "Contrats", icon: "📄" },
 ];
 
 const MAIRE_ITEMS = [

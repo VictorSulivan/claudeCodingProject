@@ -68,6 +68,8 @@ model User {
   resourceEntries ResourceEntry[]
   ownedSlots      AgendaSlot[]    @relation("AgendaSlotOwner")
   createdSlots    AgendaSlot[]    @relation("AgendaSlotCreator")
+  createdContracts Contract[]     @relation("ContractCreator")
+  targetContracts  Contract[]     @relation("ContractTarget")
 }
 
 model Event {
@@ -187,7 +189,59 @@ model AgendaSlot {
   updatedAt   DateTime @updatedAt
 }
 
+// ─── Contrats ─────────────────────────────────────────────────────────────────
+
+model Contract {
+  id     String         @id @default(cuid())
+  kind   ContractKind
+  status ContractStatus @default(BROUILLON)
+  title  String
+
+  startDate DateTime
+  endDate   DateTime?
+
+  // Spécifique employé
+  jobTitle     String?
+  contractType String?   // "CDI", "CDD", "Titulaire", "Stagiaire"…
+
+  // Spécifique contractant
+  serviceDescription String?
+  deliverables       String?
+
+  // Rémunération (optionnel, en mornilles)
+  remunerationAmount Float?
+  remunerationNote   String?
+
+  // Champs libres et notes
+  notes        String?
+  customFields Json    @default("[]")  // [{label:string, value:string}]
+
+  // Accusé de réception
+  acknowledgedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creatorId    String
+  creator      User   @relation("ContractCreator", fields: [creatorId], references: [id])
+  targetUserId String
+  targetUser   User   @relation("ContractTarget", fields: [targetUserId], references: [id])
+}
+
 // ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum ContractKind {
+  EMPLOYE
+  CONTRACTANT
+}
+
+enum ContractStatus {
+  BROUILLON
+  ENVOYE
+  ACCEPTE
+  TERMINE
+  ANNULE
+}
 
 enum Role {
   ADMIN
