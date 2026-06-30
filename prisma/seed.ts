@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {
@@ -13,7 +14,7 @@ async function main() {
   // Créer les utilisateurs
   const password = await bcrypt.hash("password123", 12);
 
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "admin@highlands.fr" },
     update: {},
     create: {
@@ -149,7 +150,7 @@ async function main() {
     },
   });
 
-  const generateurs = await prisma.resource.create({
+  await prisma.resource.create({
     data: {
       name: "Générateurs électriques",
       description: "Groupes électrogènes 10kW pour les scènes secondaires",

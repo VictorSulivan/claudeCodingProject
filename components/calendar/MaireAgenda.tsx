@@ -40,7 +40,7 @@ interface MaireAgendaProps {
   currentUserId: string;
 }
 
-export function MaireAgenda({ maireId, maireName, slots, events, allEvents, canWrite, currentUserId }: MaireAgendaProps) {
+export function MaireAgenda({ maireId, maireName, slots, events, allEvents, canWrite, currentUserId: _currentUserId }: MaireAgendaProps) {
   const router = useRouter();
   const [tab, setTab] = useState<"calendar" | "list">("calendar");
 

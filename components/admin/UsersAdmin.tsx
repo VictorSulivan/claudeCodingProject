@@ -16,7 +16,6 @@ const ROLES: Role[] = ["ADMIN", "MAIRE", "ADJOINTE", "EMPLOYEE", "CONTRACTANT"];
 export function UsersAdmin({ users, currentUserId }: { users: UserRow[]; currentUserId: string }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ email: "", name: "", password: "", userRole: "EMPLOYEE" as Role, organization: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

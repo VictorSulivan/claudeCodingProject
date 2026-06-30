@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
 import { Role } from "@/app/generated/prisma/client";
 import { renderToBuffer } from "@react-pdf/renderer";
-import React from "react";
-import { ContractPDFTemplate } from "@/components/contracts/ContractPDFTemplate";
-import type { DocumentProps } from "@react-pdf/renderer";
+import { buildContractDocument } from "@/components/contracts/ContractPDFTemplate";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -35,11 +33,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const contractData = {
     ...contract,
-    customFields: Array.isArray(contract.customFields) ? contract.customFields : [],
+    customFields: (Array.isArray(contract.customFields) ? contract.customFields : []) as Array<{ label: string; value: string }>,
   };
 
-  const element = React.createElement(ContractPDFTemplate, { contract: contractData as any }) as React.ReactElement<DocumentProps>;
-  const buffer = await renderToBuffer(element);
+  const buffer = await renderToBuffer(buildContractDocument(contractData));
 
   const safeName = contract.title
     .toLowerCase()

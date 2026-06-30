@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseParisDateTime } from "@/lib/date-paris";
 
 // POST — ajouter une entrée d'approvisionnement
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       procuredById: session.user.id,
       location: location ?? null,
       notes: notes ?? null,
-      procuredAt: procuredAt ? new Date(procuredAt) : new Date(),
+      procuredAt: procuredAt ? parseParisDateTime(procuredAt) : new Date(),
     },
     include: { procuredBy: { select: { id: true, name: true } } },
   });
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 // DELETE — supprimer une entrée
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params: _params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 

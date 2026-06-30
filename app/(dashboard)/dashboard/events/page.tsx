@@ -3,7 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { Navbar } from "@/components/layout/Navbar";
 import { can } from "@/lib/permissions";
 import { Role } from "@/app/generated/prisma/client";
+import { Prisma } from "@/app/generated/prisma/client";
 import Link from "next/link";
+
+type EventWithMeta = Prisma.EventGetPayload<{
+  include: {
+    creator: { select: { id: true; name: true; organization: true } };
+    _count: { select: { tasks: true; resources: true; shares: true } };
+  };
+}>;
 
 export default async function EventsPage() {
   const session = await auth();
@@ -80,7 +88,7 @@ export default async function EventsPage() {
   );
 }
 
-function EventCard({ event }: { event: any }) {
+function EventCard({ event }: { event: EventWithMeta }) {
   const start = new Date(event.startDate);
   const end = new Date(event.endDate);
 

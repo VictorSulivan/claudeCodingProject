@@ -31,16 +31,16 @@ export const authConfig: NextAuthConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role;
-        token.organization = (user as any).organization;
+        token.role = user.role;
+        token.organization = user.organization;
       }
       return token;
     },
     session({ session, token }) {
       if (token) {
         session.user.id = token.id as string;
-        (session.user as any).role = token.role;
-        (session.user as any).organization = token.organization;
+        session.user.role = token.role as import("@/app/generated/prisma/client").Role;
+        session.user.organization = token.organization as string | null | undefined;
       }
       return session;
     },

@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const eventId = searchParams.get("eventId");
-  const role = session.user.role as Role;
 
   const where = eventId ? { eventId } : {};
 

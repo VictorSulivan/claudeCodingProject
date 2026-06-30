@@ -5,7 +5,7 @@ import { can } from "@/lib/permissions";
 import { ContractKind, ContractStatus, Role } from "@/app/generated/prisma/client";
 import { parseParisDateTime } from "@/lib/date-paris";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 

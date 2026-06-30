@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Role, TaskStatus } from "@/app/generated/prisma/client";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { can } from "@/lib/permissions";
 import { ResourcePanel } from "@/components/resources/ResourcePanel";
 
 interface User { id: string; name?: string | null; email?: string; organization?: string | null }
@@ -54,7 +54,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   CANCELLED: "bg-red-100 text-red-600",
 };
 
-export function EventDetail({ event, userId, role, isOwner, canPublish, canManageTasks, canManageResources, allUsers }: Props) {
+export function EventDetail({ event, userId: _userId, role, isOwner, canPublish: _canPublish, canManageTasks, canManageResources, allUsers }: Props) {
   const router = useRouter();
   const [tab, setTab] = useState<"info" | "tasks" | "resources">("info");
   const [inAgenda, setInAgenda] = useState(event.inAgenda);
@@ -160,7 +160,7 @@ export function EventDetail({ event, userId, role, isOwner, canPublish, canManag
             >
               {inAgenda ? "✓ Dans mon agenda" : "+ Ajouter à mon agenda"}
             </button>
-            {(isOwner || role === "ADMIN" || role === "MAIRE") && (
+            {(isOwner || can(role, "events:delete:any")) && (
               <button
                 onClick={deleteEvent}
                 className="px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
