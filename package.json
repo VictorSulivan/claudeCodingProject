@@ -9,7 +9,12 @@
     "postinstall": "prisma generate",
     "lint": "eslint",
     "seed": "npx tsx --env-file .env prisma/seed.ts",
-    "generate": "prisma generate && rm -rf .next"
+    "generate": "prisma generate && rm -rf .next",
+    "create-admin": "npx tsx --env-file .env prisma/create-admin.ts",
+    "create-maire": "npx tsx --env-file .env prisma/create-maire.ts",
+    "create-adjointe": "npx tsx --env-file .env prisma/create-adjointe.ts",
+    "create-employee": "npx tsx --env-file .env prisma/create-employee.ts",
+    "create-contractant": "npx tsx --env-file .env prisma/create-contractant.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

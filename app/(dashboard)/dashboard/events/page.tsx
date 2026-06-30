@@ -91,10 +91,10 @@ function EventCard({ event }: { event: any }) {
     >
       <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center flex-shrink-0">
         <span className="text-sm font-bold text-slate-700">
-          {start.toLocaleDateString("fr", { day: "2-digit" })}
+          {start.toLocaleDateString("fr", { day: "2-digit", timeZone: "Europe/Paris" })}
         </span>
         <span className="text-xs text-slate-400">
-          {start.toLocaleDateString("fr", { month: "short" })}
+          {start.toLocaleDateString("fr", { month: "short", timeZone: "Europe/Paris" })}
         </span>
       </div>
 
@@ -107,11 +107,11 @@ function EventCard({ event }: { event: any }) {
         </div>
 
         <p className="text-sm text-slate-500 mt-0.5">
-          {start.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" })} →{" "}
-          {end.toLocaleDateString("fr") !== start.toLocaleDateString("fr")
-            ? `${end.toLocaleDateString("fr")} `
+          {start.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })} →{" "}
+          {end.toLocaleDateString("fr", { timeZone: "Europe/Paris" }) !== start.toLocaleDateString("fr", { timeZone: "Europe/Paris" })
+            ? `${end.toLocaleDateString("fr", { timeZone: "Europe/Paris" })} `
             : ""}
-          {end.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" })}
+          {end.toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}
           {event.location && ` · ${event.location}`}
         </p>
 

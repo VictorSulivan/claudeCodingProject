@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/permissions";
 import { Role } from "@/app/generated/prisma/client";
+import { parseParisDateTime } from "@/lib/date-paris";
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -51,8 +52,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       title: body.title,
       description: body.description ?? null,
       location: body.location ?? null,
-      startAt: body.startAt ? new Date(body.startAt) : undefined,
-      endAt: body.endAt ? new Date(body.endAt) : undefined,
+      startAt: body.startAt ? parseParisDateTime(body.startAt) : undefined,
+      endAt: body.endAt ? parseParisDateTime(body.endAt) : undefined,
       eventId: body.eventId ?? null,
     },
     include: {
