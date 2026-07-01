@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Role, TaskStatus } from "@/app/generated/prisma/client";
 import { can } from "@/lib/permissions";
 import { ResourcePanel } from "@/components/resources/ResourcePanel";
+import { EventSharePanel } from "@/components/calendar/EventSharePanel";
 
 interface User { id: string; name?: string | null; email?: string; organization?: string | null }
 interface TaskItem {
@@ -203,29 +204,13 @@ export function EventDetail({ event, userId: _userId, role, isOwner, canPublish:
       {/* Info tab */}
       {tab === "info" && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h4 className="font-semibold text-slate-700 mb-3">Participants ({event.shares.length + 1})</h4>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold">
-                {(event.creator.name ?? "?")[0].toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-700">{event.creator.name ?? event.creator.email}</p>
-                <p className="text-xs text-slate-400">Créateur{event.creator.organization ? ` · ${event.creator.organization}` : ""}</p>
-              </div>
-            </div>
-            {event.shares.map((s) => (
-              <div key={s.user.id} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-white text-xs font-semibold">
-                  {(s.user.name ?? s.user.email ?? "?")[0].toUpperCase()}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700">{s.user.name ?? s.user.email}</p>
-                  {s.user.organization && <p className="text-xs text-slate-400">{s.user.organization}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
+          <EventSharePanel
+            eventId={event.id}
+            creator={event.creator}
+            shares={event.shares}
+            allUsers={allUsers}
+            canManage={isOwner || can(role, "events:delete:any")}
+          />
         </div>
       )}
 
