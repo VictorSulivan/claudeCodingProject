@@ -15,7 +15,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
+  const resource = await prisma.resource.findUnique({ where: { id } });
+  if (!resource) return NextResponse.json({ error: "Ressource introuvable" }, { status: 404 });
+
   const body = await req.json();
+  if (body.quantityNeeded !== undefined && Number(body.quantityNeeded) <= 0) {
+    return NextResponse.json({ error: "La quantité doit être supérieure à 0" }, { status: 400 });
+  }
 
   const updated = await prisma.resource.update({
     where: { id },
@@ -46,6 +52,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
+  const resource = await prisma.resource.findUnique({ where: { id } });
+  if (!resource) return NextResponse.json({ error: "Ressource introuvable" }, { status: 404 });
+
   await prisma.resource.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

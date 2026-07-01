@@ -34,6 +34,7 @@ export function KanbanBoard({ tasks, canAssign, currentUserId, allUsers, allEven
   const [filterEventId, setFilterEventId] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("createdAt");
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   const displayedTasks = useMemo(() => {
     let result = filterEventId
@@ -68,7 +69,13 @@ export function KanbanBoard({ tasks, canAssign, currentUserId, allUsers, allEven
 
   async function deleteTask(taskId: string) {
     if (!confirm("Supprimer cette tâche ?")) return;
-    await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    setDeleteError("");
+    const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setDeleteError(data.error ?? "Impossible de supprimer la tâche");
+      return;
+    }
     router.refresh();
   }
 
@@ -116,6 +123,10 @@ export function KanbanBoard({ tasks, canAssign, currentUserId, allUsers, allEven
           + Nouvelle tâche
         </button>
       </div>
+
+      {deleteError && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{deleteError}</p>
+      )}
 
       {showForm && (
         <NewTaskForm

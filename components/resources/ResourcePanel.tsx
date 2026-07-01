@@ -26,29 +26,46 @@ export function ResourcePanel({ resources, eventId, canManage }: ResourcePanelPr
   // New resource form
   const [newRes, setNewRes] = useState({ name: "", description: "", quantityNeeded: "", unit: "" });
   const [resLoading, setResLoading] = useState(false);
+  const [resError, setResError] = useState("");
 
   // New entry form per resource
   const [newEntry, setNewEntry] = useState<Record<string, { quantity: string; location: string; notes: string; procuredAt: string }>>({});
   const [entryLoading, setEntryLoading] = useState<string | null>(null);
+  const [entryErrors, setEntryErrors] = useState<Record<string, string>>({});
 
   async function addResource() {
-    if (!newRes.name || !newRes.quantityNeeded) return;
+    if (!newRes.name.trim() || !newRes.quantityNeeded) return;
+    if (Number(newRes.quantityNeeded) <= 0) {
+      setResError("La quantité doit être supérieure à 0");
+      return;
+    }
+    setResError("");
     setResLoading(true);
-    await fetch("/api/resources", {
+    const res = await fetch("/api/resources", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...newRes, eventId }),
+      body: JSON.stringify({ ...newRes, name: newRes.name.trim(), eventId }),
     });
-    setNewRes({ name: "", description: "", quantityNeeded: "", unit: "" });
     setResLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setResError(data.error ?? "Une erreur est survenue");
+      return;
+    }
+    setNewRes({ name: "", description: "", quantityNeeded: "", unit: "" });
     router.refresh();
   }
 
   async function addEntry(resourceId: string) {
     const e = newEntry[resourceId];
     if (!e?.quantity) return;
+    if (Number(e.quantity) <= 0) {
+      setEntryErrors((prev) => ({ ...prev, [resourceId]: "La quantité doit être supérieure à 0" }));
+      return;
+    }
+    setEntryErrors((prev) => ({ ...prev, [resourceId]: "" }));
     setEntryLoading(resourceId);
-    await fetch(`/api/resources/${resourceId}/entries`, {
+    const res = await fetch(`/api/resources/${resourceId}/entries`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -58,8 +75,13 @@ export function ResourcePanel({ resources, eventId, canManage }: ResourcePanelPr
         procuredAt: e.procuredAt || undefined,
       }),
     });
-    setNewEntry((prev) => ({ ...prev, [resourceId]: { quantity: "", location: "", notes: "", procuredAt: "" } }));
     setEntryLoading(null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setEntryErrors((prev) => ({ ...prev, [resourceId]: data.error ?? "Une erreur est survenue" }));
+      return;
+    }
+    setNewEntry((prev) => ({ ...prev, [resourceId]: { quantity: "", location: "", notes: "", procuredAt: "" } }));
     router.refresh();
   }
 
@@ -119,12 +141,15 @@ export function ResourcePanel({ resources, eventId, canManage }: ResourcePanelPr
               rows={2}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
+            {resError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{resError}</p>
+            )}
             <button
               onClick={addResource}
-              disabled={!newRes.name || !newRes.quantityNeeded || resLoading}
+              disabled={!newRes.name.trim() || !newRes.quantityNeeded || resLoading}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              Ajouter la ressource
+              {resLoading ? "Ajout..." : "Ajouter la ressource"}
             </button>
           </div>
         </div>
@@ -174,7 +199,7 @@ export function ResourcePanel({ resources, eventId, canManage }: ResourcePanelPr
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <span className="text-xs text-slate-400 flex-shrink-0">{pct}%</span>
+                      <span className="text-xs text-slate-400 shrink-0">{pct}%</span>
                     </div>
                   </div>
                   <span className="text-slate-400 text-sm">{isExpanded ? "▲" : "▼"}</span>
@@ -198,7 +223,7 @@ export function ResourcePanel({ resources, eventId, canManage }: ResourcePanelPr
                             key={entry.id}
                             className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100"
                           >
-                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
                               <span className="text-xs font-bold text-green-700">+{entry.quantity}</span>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -261,6 +286,11 @@ export function ResourcePanel({ resources, eventId, canManage }: ResourcePanelPr
                         rows={2}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       />
+                      {entryErrors[res.id] && (
+                        <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                          {entryErrors[res.id]}
+                        </p>
+                      )}
                       <button
                         onClick={() => addEntry(res.id)}
                         disabled={!entryForm.quantity || entryLoading === res.id}

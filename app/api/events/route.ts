@@ -61,8 +61,14 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { title, description, startDate, endDate, location, isPublic } = body;
 
-  if (!title || !startDate || !endDate) {
+  if (!title?.trim() || !startDate || !endDate) {
     return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
+  }
+
+  const parsedStart = parseParisDateTime(startDate);
+  const parsedEnd = parseParisDateTime(endDate);
+  if (parsedEnd <= parsedStart) {
+    return NextResponse.json({ error: "La date de fin doit être après la date de début" }, { status: 400 });
   }
 
   const role = session.user.role as Role;
@@ -75,10 +81,10 @@ export async function POST(req: NextRequest) {
 
   const event = await prisma.event.create({
     data: {
-      title,
+      title: title.trim(),
       description,
-      startDate: parseParisDateTime(startDate),
-      endDate: parseParisDateTime(endDate),
+      startDate: parsedStart,
+      endDate: parsedEnd,
       location,
       isPublic: isPublic && can(role, "events:create:public"),
       creatorId: session.user.id,

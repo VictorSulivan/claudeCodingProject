@@ -38,8 +38,14 @@ export async function POST(req: NextRequest) {
   const { title, description, location, startAt, endAt, eventId, ownerId } = body;
   const role = session.user.role as Role;
 
-  if (!title || !startAt || !endAt) {
+  if (!title?.trim() || !startAt || !endAt) {
     return NextResponse.json({ error: "Titre, début et fin sont requis" }, { status: 400 });
+  }
+
+  const parsedStart = parseParisDateTime(startAt);
+  const parsedEnd = parseParisDateTime(endAt);
+  if (parsedEnd <= parsedStart) {
+    return NextResponse.json({ error: "La fin doit être après le début" }, { status: 400 });
   }
 
   const targetOwner = ownerId ?? session.user.id;
@@ -51,11 +57,11 @@ export async function POST(req: NextRequest) {
 
   const slot = await prisma.agendaSlot.create({
     data: {
-      title,
+      title: title.trim(),
       description: description || null,
       location: location || null,
-      startAt: parseParisDateTime(startAt),
-      endAt: parseParisDateTime(endAt),
+      startAt: parsedStart,
+      endAt: parsedEnd,
       ownerId: targetOwner,
       createdById: session.user.id,
       eventId: eventId || null,

@@ -16,19 +16,21 @@ interface Props {
 export function NewTaskForm({ canAssign, allUsers, allEvents, onCreated, onCancel }: Props) {
   const [form, setForm] = useState({ title: "", description: "", assigneeId: "", eventId: "", dueDate: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function set(key: string, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
   async function submit() {
-    if (!form.title) return;
+    if (!form.title.trim()) return;
+    setError("");
     setLoading(true);
-    await fetch("/api/tasks", {
+    const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: form.title,
+        title: form.title.trim(),
         description: form.description || undefined,
         assigneeId: form.assigneeId || undefined,
         eventId: form.eventId || undefined,
@@ -36,6 +38,11 @@ export function NewTaskForm({ canAssign, allUsers, allEvents, onCreated, onCance
       }),
     });
     setLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Une erreur est survenue");
+      return;
+    }
     onCreated();
   }
 
@@ -81,10 +88,13 @@ export function NewTaskForm({ canAssign, allUsers, allEvents, onCreated, onCance
           className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{error}</p>
+      )}
       <div className="flex gap-2">
         <button
           onClick={submit}
-          disabled={!form.title || loading}
+          disabled={!form.title.trim() || loading}
           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
           {loading ? "Création..." : "Créer"}

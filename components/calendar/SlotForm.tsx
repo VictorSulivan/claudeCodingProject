@@ -24,6 +24,7 @@ export function SlotForm({ ownerId, ownerName, availableEvents = [], onSuccess }
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -38,7 +39,12 @@ export function SlotForm({ ownerId, ownerName, availableEvents = [], onSuccess }
   }
 
   async function submit() {
-    if (!form.title || !form.startAt || !form.endAt) return;
+    if (!form.title.trim() || !form.startAt || !form.endAt) return;
+    if (form.endAt <= form.startAt) {
+      setError("La fin doit être après le début");
+      return;
+    }
+    setError("");
     setLoading(true);
     const res = await fetch("/api/agenda/slots", {
       method: "POST",
@@ -59,6 +65,9 @@ export function SlotForm({ ownerId, ownerName, availableEvents = [], onSuccess }
       setOpen(false);
       onSuccess?.();
       router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Une erreur est survenue");
     }
   }
 
@@ -133,10 +142,13 @@ export function SlotForm({ ownerId, ownerName, availableEvents = [], onSuccess }
             </select>
           )}
 
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{error}</p>
+          )}
           <div className="flex gap-2 pt-1">
             <button
               onClick={submit}
-              disabled={!form.title || !form.startAt || !form.endAt || loading}
+              disabled={!form.title.trim() || !form.startAt || !form.endAt || loading}
               className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
               {loading ? "Enregistrement…" : "Ajouter"}

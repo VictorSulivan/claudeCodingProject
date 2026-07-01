@@ -12,9 +12,11 @@ interface Props {
 export function NoteForm({ taskId, onNoteCreated, onScrollToBottom }: Props) {
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
   async function submit() {
     if (!note.trim()) return;
+    setError("");
     setSending(true);
     const res = await fetch(`/api/tasks/${taskId}/notes`, {
       method: "POST",
@@ -26,6 +28,9 @@ export function NoteForm({ taskId, onNoteCreated, onScrollToBottom }: Props) {
       setNote("");
       onNoteCreated(newNote);
       requestAnimationFrame(onScrollToBottom);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Impossible d'envoyer la note");
     }
     setSending(false);
   }
@@ -41,6 +46,9 @@ export function NoteForm({ taskId, onNoteCreated, onScrollToBottom }: Props) {
         rows={3}
         className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-slate-50 placeholder-slate-400"
       />
+      {error && (
+        <p className="text-sm text-red-600 mt-2">{error}</p>
+      )}
       <div className="flex items-center justify-between mt-2">
         <span className="text-xs text-slate-400">Ctrl + Entrée pour envoyer</span>
         <button

@@ -64,13 +64,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Droits insuffisants pour publier" }, { status: 403 });
   }
 
+  const newStart = body.startDate ? parseParisDateTime(body.startDate) : undefined;
+  const newEnd = body.endDate ? parseParisDateTime(body.endDate) : undefined;
+  const effectiveStart = newStart ?? event.startDate;
+  const effectiveEnd = newEnd ?? event.endDate;
+  if (effectiveEnd <= effectiveStart) {
+    return NextResponse.json({ error: "La date de fin doit être après la date de début" }, { status: 400 });
+  }
+
   const updated = await prisma.event.update({
     where: { id },
     data: {
-      title: body.title,
+      title: body.title?.trim() ?? undefined,
       description: body.description,
-      startDate: body.startDate ? parseParisDateTime(body.startDate) : undefined,
-      endDate: body.endDate ? parseParisDateTime(body.endDate) : undefined,
+      startDate: newStart,
+      endDate: newEnd,
       location: body.location,
       isPublic: body.isPublic,
     },

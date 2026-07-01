@@ -63,6 +63,7 @@ export function EventDetail({ event, userId: _userId, role, isOwner, canPublish:
   // Task form state
   const [newTask, setNewTask] = useState({ title: "", description: "", assigneeId: "", dueDate: "" });
   const [taskLoading, setTaskLoading] = useState(false);
+  const [taskError, setTaskError] = useState("");
 
   async function toggleAgenda() {
     setAgendaLoading(true);
@@ -89,21 +90,27 @@ export function EventDetail({ event, userId: _userId, role, isOwner, canPublish:
   }
 
   async function addTask() {
-    if (!newTask.title) return;
+    if (!newTask.title.trim()) return;
+    setTaskError("");
     setTaskLoading(true);
-    await fetch("/api/tasks", {
+    const res = await fetch("/api/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: newTask.title,
+        title: newTask.title.trim(),
         description: newTask.description,
         eventId: event.id,
         assigneeId: newTask.assigneeId || undefined,
         dueDate: newTask.dueDate || undefined,
       }),
     });
-    setNewTask({ title: "", description: "", assigneeId: "", dueDate: "" });
     setTaskLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setTaskError(data.error ?? "Une erreur est survenue");
+      return;
+    }
+    setNewTask({ title: "", description: "", assigneeId: "", dueDate: "" });
     router.refresh();
   }
 
@@ -148,7 +155,7 @@ export function EventDetail({ event, userId: _userId, role, isOwner, canPublish:
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 flex-shrink-0">
+          <div className="flex flex-col gap-2 shrink-0">
             <button
               onClick={toggleAgenda}
               disabled={agendaLoading}
@@ -260,9 +267,12 @@ export function EventDetail({ event, userId: _userId, role, isOwner, canPublish:
                     className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                {taskError && (
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">{taskError}</p>
+                )}
                 <button
                   onClick={addTask}
-                  disabled={!newTask.title || taskLoading}
+                  disabled={!newTask.title.trim() || taskLoading}
                   className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
                   Ajouter la tâche
