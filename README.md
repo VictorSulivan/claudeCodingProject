@@ -1,42 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Highlands — Plateforme de gestion événementielle
 
-## Getting Started
+Application de gestion d'événements, d'équipes et de ressources pour la structure Highlands (Mairie + prestataires + associations).
 
-First, run the development server:
+## Ce que fait l'application
+
+- **Calendrier global** : visualisation de tous les événements publics
+- **Agenda personnel** : chaque membre gère ses créneaux et ses participations
+- **Gestion d'événements** : création, partage ciblé par utilisateur, gestion des ressources associées
+- **Tâches Kanban** : suivi des tâches liées aux événements (TODO / IN_PROGRESS / DONE / CANCELLED)
+- **Ressources** : suivi des besoins matériels (quantité requise vs approvisionné, qui apporte quoi)
+- **Contrats** : rédaction et workflow de validation des contrats employés et contractants (PDF)
+- **Administration** : gestion des utilisateurs et des rôles (ADMIN / MAIRE / ADJOINTE / EMPLOYEE / CONTRACTANT)
+
+## Stack
+
+- **Next.js 16** (App Router, React 19)
+- **TypeScript** (strict mode)
+- **Prisma 7** + **Neon PostgreSQL**
+- **Auth.js v5** (authentification par credentials)
+- **Tailwind CSS v4**
+
+## Lancer le projet
 
 ```bash
+# Installation
+npm install
+
+# Variables d'environnement (copier et remplir)
+cp .env.example .env
+
+# Générer le client Prisma
+npm run generate
+
+# Démarrer en développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+L'application est disponible sur [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variables d'environnement requises
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+DATABASE_URL=          # URL Neon PostgreSQL (pooled)
+DATABASE_URL_UNPOOLED= # URL directe pour les migrations Prisma
+AUTH_SECRET=           # Secret Auth.js (générer avec: openssl rand -base64 32)
+```
 
-## Learn More
+## Scripts utiles
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev          # Serveur de développement
+npm run build        # Build production
+npm run lint         # ESLint
+npx tsc --noEmit     # Vérification TypeScript
+npm run validate     # Validation des patterns API (CLAUDE.md)
+npm run seed         # Données de test
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+  (auth)/          # Pages login
+  (dashboard)/     # Pages protégées (dashboard)
+  api/             # Routes API REST
+  generated/       # Client Prisma (auto-généré)
+components/        # Composants React réutilisables
+lib/               # Logique métier partagée
+  auth.ts          # Configuration Auth.js
+  permissions.ts   # Système RBAC can(role, perm)
+  date-paris.ts    # Utilitaires dates (fuseau Europe/Paris)
+  prisma.ts        # Client Prisma (adapter Neon)
+prisma/
+  schema.prisma    # Schéma de base de données
+  seed.ts          # Données de démonstration
+scripts/
+  validate-api.ts  # Script déterministe de validation des routes API
+.claude/
+  skills/
+    new-module.md  # Skill : ajouter un module Highlands
+    quality.md     # Skill : quality gates avant livraison
+```
 
-## Deploy on Vercel
+## Ce que j'ai appris
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-✓ Compte administrateur créé
-
-  Nom        : Mathéo Sullivan
-  Email      : admin@maville.fr
-  Mot de passe : xoOckIRjaoxVVQxW
+- L'IA génère du code qui compile mais ne respecte pas forcément les invariants métier (permissions, patterns d'API). Un script déterministe comme `validate-api.ts` attrape ces violations systématiquement, là où un prompt "vérifie si mon code est correct" donne des réponses différentes à chaque fois.
+- Le découpage RSC / Client Component doit être décidé dès le départ, pas refactorisé après. Les bugs de sérialisation Prisma → Date → JSON se retrouvent partout si on ne pose pas la règle tôt.
+- Un `CLAUDE.md` avec des règles concrètes et vérifiables (longueur de fichier, pattern d'ordre des handlers) est plus efficace qu'un `CLAUDE.md` avec des principes généraux.

@@ -14,7 +14,8 @@
     "create-maire": "npx tsx --env-file .env prisma/create-maire.ts",
     "create-adjointe": "npx tsx --env-file .env prisma/create-adjointe.ts",
     "create-employee": "npx tsx --env-file .env prisma/create-employee.ts",
-    "create-contractant": "npx tsx --env-file .env prisma/create-contractant.ts"
+    "create-contractant": "npx tsx --env-file .env prisma/create-contractant.ts",
+    "validate": "npx tsx scripts/validate-api.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
